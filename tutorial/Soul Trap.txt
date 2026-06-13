@@ -1,0 +1,62 @@
+If you know about Meme boss in HSR, it's pretty much look like it
+
+The boss will trap 2 latest character action used
+
+For easier one, you can do it randomly. While also prevent hitting the same character that got trapped
+
+Plugin I used is Yanfly Action Sequence, and OZU Damaged Sprites
+
+Notetag I use for the skill is this
+<target action>
+   if target.states().some(s => s.id == 25)
+      eval: const filteredParty = $gameParty.members().filter(o => !o.states().some(s => s.id == 25));this._targets[0] = filteredParty[Math.floor(Math.random() * filteredParty.length)]
+   end
+   immortal: targets, true
+   perform action
+   action animation
+   wait: 2
+   motion damage: target
+   wait: 30
+   if $gameTroop.members().some(o => o.enemyId() == 29 && o.isHidden());
+      add state 25: target
+      wait: 40
+      eval: const hiddenEnemy=$gameTroop.members().find(o => o.enemyId() == 29 && o.isHidden());const battlerName="Trapped"+target.battlerName();hiddenEnemy.startAnimation(477);hiddenEnemy.setBattlerImage(battlerName);hiddenEnemy.updateBattler();hiddenEnemy._trappedActor=target;
+      wait: 10
+      eval: $gameTroop.members().find(o => o.enemyId() == 29 && o.isHidden()).appear();
+   else
+      action effect
+   end
+   immortal: targets, false
+</target action>
+
+=====States=====
+Refer to Soul Trap.png
+
+=====Breakdown=====
+eval: const filteredParty = $gameParty.members().filter(o => !o.states().some(s => s.id == 25));this._targets[0] = filteredParty[Math.floor(Math.random() * filteredParty.length)]
+This to change the target into other party member that doesn't have Trapped state
+
+if $gameTroop.members().some(o => o.enemyId() == 29 && o.isHidden());
+    add state 25: target
+    wait: 40
+    eval: const hiddenEnemy=$gameTroop.members().find(o => o.enemyId() == 29 && o.isHidden());const battlerName="Trapped"+target.battlerName();hiddenEnemy.startAnimation(477);hiddenEnemy.setBattlerImage(battlerName);hiddenEnemy.updateBattler();hiddenEnemy._trappedActor=target;
+    wait: 10
+    eval: $gameTroop.members().find(o => o.enemyId() == 29 && o.isHidden()).appear();
+else
+    action effect
+end
+
+This will pick the party that doesn't have Trapped states yet
+If it's already trapped 2 party member (In my case), it will damage instead for other non Trapped member
+After that, replace the enemy Sprites with Trapped Members
+Store the actor into other value from troop member (hiddenEnemy._trappedActor=target)
+
+=====Troop and enemy=====
+Refer to Soul Trap 2.png and Soul Trap 3.png
+
+The passive state is to reduce any damage into 1
+After the enemy defeated, the trapped actor will be "revived" and back into battle
+
+The monster will gainHp and then back to hidden for next usage
+
+Assume the reaper is the boss. You can make it immortal first, and then after reach 0, Trapped soul freed and then reaper died
