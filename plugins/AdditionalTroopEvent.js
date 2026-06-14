@@ -61,6 +61,10 @@ VynPlugin.AdditionalTroopEvent = VynPlugin.AdditionalTroopEvent || {};
  * Example:
  * PartyHp 33 70 => Run Troop event if party HP is between 33% and 70%
  * ============================================================================
+ * Changelog
+ * v1.0.1
+ * Adjust database loader
+ * 
  * v1.0.0 
  * Initiate Plugin
  */
@@ -78,7 +82,10 @@ var initObject = {
 VynPlugin.AdditionalTroopEvent.Database_Loaded = DataManager.isDatabaseLoaded;
 DataManager.isDatabaseLoaded = function () {
     if (!VynPlugin.AdditionalTroopEvent.Database_Loaded.call(this)) return false;
-    this.processAdditionalTroopEvent();
+    if (!VynPlugin.AdditionalTroopEvent._loadAdditionalTroopEvent) {
+        this.processAdditionalTroopEvent();
+        VynPlugin.AdditionalTroopEvent._loadAdditionalTroopEvent = true;
+    }
     return true;
 };
 
@@ -201,13 +208,13 @@ BattleManager.updateEventMain = function () {
 Game_Troop.prototype.meetsConditions = function (page) {
     // VynPlugin.AdditionalTroopEvent.Game_Troop_meetsConditions.apply(this, arguments);
     var c = page.conditions;
-    if (!c.turnEnding && 
-        !c.turnValid && 
+    if (!c.turnEnding &&
+        !c.turnValid &&
         !c.enemyValid &&
-        !c.actorValid && 
-        !c.switchValid && 
-        !c.switch2Valid && 
-        !c.variableValid && 
+        !c.actorValid &&
+        !c.switchValid &&
+        !c.switch2Valid &&
+        !c.variableValid &&
         // !c.actorTurnValid &&
         // !c.enemyTurnValid && 
         !c.partyHpValid) {

@@ -8,7 +8,7 @@ VynPlugin.DynamicPartySize = VynPlugin.DynamicPartySize || {};
 /*:
  * Dynamic Party Size
  *
- * @plugindesc v1.0.0 This plugin to change party size dynamically
+ * @plugindesc v1.1.0 This plugin to change party size dynamically
  * @author Vyndicate
  *
  * @param Max Battlers
@@ -60,8 +60,17 @@ VynPlugin.DynamicPartySize = VynPlugin.DynamicPartySize || {};
  * Line Gap:
  * How long is the gap between line? You can set the number as you desire
  * 
+ * Available functions:
+ * $gameParty.setCustomBattleMembers(count) => Set custom battle members count
+ * $gameParty.isCustomMaxBattle() => Check if custom battle members count is set
+ * $gameParty.getCustomMaxBattle() => Get custom battle members count
+ * $gameParty.partySizeFromItemEffects() => Get party size adjustment from item effects. This will be added to default battle members count
+ * $gameParty.setPartySizeFromItemEffects(size) => Set party size adjustment from item effects. This will be added to default battle members count
+ * 
  * ============================================================================
  * Changelog
+ * v1.1.0
+ * Add descriptions
  * 
  * v1.0.0 
  * Init plugin
@@ -103,7 +112,7 @@ DataManager.setAmountAdjustment = function (armors) {
 // Game_Actor
 //-----------------------------------------------------------------------------
 VynPlugin.DynamicPartySize.Game_Actor_changeEquip = Game_Actor.prototype.changeEquip;
-Game_Actor.prototype.changeEquip = function(slotId, item) {
+Game_Actor.prototype.changeEquip = function (slotId, item) {
     VynPlugin.DynamicPartySize.Game_Actor_changeEquip.apply(this, arguments);
     var equips = this.equips().filter(equip => equip != null && equip.adjustPartySize != 0);
     var adjustPartySize = equips.reduce(function (acc, equip) {
@@ -116,7 +125,7 @@ Game_Actor.prototype.changeEquip = function(slotId, item) {
 // Game_Party
 //-----------------------------------------------------------------------------
 VynPlugin.DynamicPartySize.Game_Party_initialize = Game_Party.prototype.initialize;
-Game_Party.prototype.initialize = function() {
+Game_Party.prototype.initialize = function () {
     VynPlugin.DynamicPartySize.Game_Party_initialize.call(this);
     this.clearCustomMaxBattle();
 };
@@ -196,7 +205,7 @@ Sprite_Actor.prototype.setActorHome = function (index) {
         index -= perLineBattlers;
         line -= 1;
     }
-    
+
     var code = VynPlugin.params.positionX;
     try {
         homeX += eval(code);
