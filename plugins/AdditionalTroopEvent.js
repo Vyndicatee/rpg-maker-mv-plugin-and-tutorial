@@ -8,7 +8,7 @@ VynPlugin.AdditionalTroopEvent = VynPlugin.AdditionalTroopEvent || {};
 /*:
  * Additional Troop Event
  *
- * @plugindesc v1.0.0 This plugin to add some of troop event condition from RM2003
+ * @plugindesc v1.0.2 This plugin to add some of troop event condition from RM2003
  * @author Vyndicate
  *
  * @help
@@ -110,10 +110,11 @@ DataManager.processAdditionalTroopEvent = function () {
 
             for (var o = 0; o < pageList.length; o++) {
                 let parameter = pageList[o].parameters[0];
+                var parameterSplit;
                 if (parameter.includes("Evaluation")) {
-                    let parameterSplit = parameter.split(/ (.+)/);
+                    parameterSplit = parameter.split(/ (.+)/);
                 } else {
-                    let parameterSplit = parameter.split(" ");
+                    parameterSplit = parameter.split(" ");
                 }
                 let newObject = parameterProcess(parameterSplit);
                 Object.assign(troop.pages[m].conditions, newObject);

@@ -11,7 +11,6 @@ VynPlugin.AdditionalEventCondition = VynPlugin.AdditionalEventCondition || {};
  * @plugindesc v1.0.0 This plugin to add condition for map event
  * @author Vyndicate
  * 
- * 
  * ============================================================================
  * Changelog
  * v1.0.0 
@@ -27,16 +26,13 @@ var initObject = {
 //-----------------------------------------------------------------------------
 // DataManager
 //-----------------------------------------------------------------------------
-VynPlugin.AdditionalEventCondition.Database_onLoadMap = DataManager.onLoad;
-DataManager.onLoad = function(object) {
-    VynPlugin.AdditionalEventCondition.Database_onLoadMap.apply(this, arguments);
-    if (object === $dataMap) {
-        this.processAdditionalMapEvent();
-    }
+VynPlugin.AdditionalEventCondition.Scene_Map_onMapLoaded = Scene_Map.prototype.onMapLoaded;
+Scene_Map.prototype.onMapLoaded = function() {
+    this.processAdditionalMapEvent();
+    VynPlugin.AdditionalEventCondition.Scene_Map_onMapLoaded.call(this);
 };
 
-DataManager.processAdditionalMapEvent = function () {
-    if(!$dataMap || !$dataMap.events) return;
+Scene_Map.prototype.processAdditionalMapEvent = function () {
     for (var n = 1; n < $dataMap.events.length; n++) {
         var event = $dataMap.events[n];
         for (var m = 0; m < event.pages.length; m++) {
