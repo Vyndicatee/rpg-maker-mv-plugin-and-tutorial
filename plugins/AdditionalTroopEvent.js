@@ -13,8 +13,8 @@ VynPlugin.AdditionalTroopEvent = VynPlugin.AdditionalTroopEvent || {};
  *
  * @help
  * Adding some original RPG Maker 2003 troop condition into MV
- * It will give additional 5 conditions: Switch 2, Variable, Actor Turn, Enemy
- * Turn, Party HP
+ * It will give additional 6 conditions: Switch 2, Variable, Actor Turn, Enemy
+ * Turn, Party HP, Evaluation
  * 
  * Actor Turn and Enemy Turn only works when using YEP_BattleEngineCore
  * 
@@ -60,8 +60,18 @@ VynPlugin.AdditionalTroopEvent = VynPlugin.AdditionalTroopEvent || {};
  * 
  * Example:
  * PartyHp 33 70 => Run Troop event if party HP is between 33% and 70%
+ * 
+ * Evaluation formula
+ * You can put whatever you want for formula
+ * 
+ * Example:
+ * Evaluation $gameParty.allMembers().length < 3
+ * Evaluation $gameParty.aliveMembers().some(member => member.states().includes(5))
  * ============================================================================
  * Changelog
+ * v1.0.2
+ * Add eval condition
+ * 
  * v1.0.1
  * Adjust database loader
  * 
@@ -70,6 +80,7 @@ VynPlugin.AdditionalTroopEvent = VynPlugin.AdditionalTroopEvent || {};
  */
 
 var initObject = {
+    evalValid: false,
     switch2Valid: false,
     variableValid: false,
     actorTurnValid: false,
@@ -99,7 +110,11 @@ DataManager.processAdditionalTroopEvent = function () {
 
             for (var o = 0; o < pageList.length; o++) {
                 let parameter = pageList[o].parameters[0];
-                let parameterSplit = parameter.split(" ");
+                if (parameter.includes("Evaluation")) {
+                    let parameterSplit = parameter.split(/ (.+)/);
+                } else {
+                    let parameterSplit = parameter.split(" ");
+                }
                 let newObject = parameterProcess(parameterSplit);
                 Object.assign(troop.pages[m].conditions, newObject);
             }
@@ -139,6 +154,10 @@ function parameterProcess(parameterSplit) {
             result.partyLowHp = Number(parameterSplit.shift());
             result.partyHighHp = Number(parameterSplit.shift());
             result.partyHpValid = true;
+        },
+        evaluation: function () {
+            result.evalCondition = parameterSplit.shift();
+            result.evalValid = true;
         }
     };
 
@@ -155,19 +174,19 @@ function parameterProcess(parameterSplit) {
 //-----------------------------------------------------------------------------
 // BattleManager
 //-----------------------------------------------------------------------------
-BattleManager.updateEventMain = function () {
-    $gameTroop.updateInterpreter();
-    $gameParty.requestMotionRefresh();
-    if ($gameTroop.isEventRunning() || this.checkBattleEnd()) {
-        return true;
-    }
-    let isActor = !!this.actor();
-    $gameTroop.setupBattleEvent(isActor);
-    if ($gameTroop.isEventRunning() || SceneManager.isSceneChanging()) {
-        return true;
-    }
-    return false;
-};
+// BattleManager.updateEventMain = function () {
+//     $gameTroop.updateInterpreter();
+//     $gameParty.requestMotionRefresh();
+//     if ($gameTroop.isEventRunning() || this.checkBattleEnd()) {
+//         return true;
+//     }
+//     let isActor = !!this.actor();
+//     $gameTroop.setupBattleEvent(isActor);
+//     if ($gameTroop.isEventRunning() || SceneManager.isSceneChanging()) {
+//         return true;
+//     }
+//     return false;
+// };
 
 //-----------------------------------------------------------------------------
 // Game_Troop
@@ -217,8 +236,14 @@ Game_Troop.prototype.meetsConditions = function (page) {
         !c.variableValid &&
         // !c.actorTurnValid &&
         // !c.enemyTurnValid && 
-        !c.partyHpValid) {
+        !c.partyHpValid &&
+        !c.evalValid) {
         return false;  // Conditions not set
+    }
+    if (c.evalValid) {
+        if (!eval(c.evalCondition)) {
+            return false;
+        }
     }
     if (c.turnEnding) {
         if (!BattleManager.isTurnEnd()) {
