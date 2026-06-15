@@ -11,6 +11,31 @@ VynPlugin.AdditionalEventCondition = VynPlugin.AdditionalEventCondition || {};
  * @plugindesc v1.0.0 This plugin to add condition for map event
  * @author Vyndicate
  * 
+ * Event condition has limitation like troop condition. Even less than RM2003
+ * 
+ * Using plugin will add another level for conditions
+ * 
+ * Comment:
+ * Evaluation formula
+ * 
+ * Formula is anything you want to express, as long the expression is return 
+ * in boolean value
+ * 
+ * Example:
+ * Evaluation $gameParty.aliveMembers().length > 3
+ * Evaluation $gameActors.actor(3).isDead()
+ * Evaluation $gameSwitches.value(10) && !$gameSwitches.value(11)
+ * 
+ * What if I want to use a script like Galv.QUEST.status(1) == 0?
+ * 
+ * You can, but you need to use $gameMap.refresh(). Unless you have condition
+ * in the other map
+ * 
+ * Example on script call:
+ * Galv.QUEST.activate(1);
+ * $gameMap.refresh();
+ * 
+ * This will refresh on the map and the condition will work as intended
  * ============================================================================
  * Changelog
  * v1.0.0 
@@ -27,7 +52,7 @@ var initObject = {
 // DataManager
 //-----------------------------------------------------------------------------
 VynPlugin.AdditionalEventCondition.Scene_Map_onMapLoaded = Scene_Map.prototype.onMapLoaded;
-Scene_Map.prototype.onMapLoaded = function() {
+Scene_Map.prototype.onMapLoaded = function () {
     this.processAdditionalMapEvent();
     VynPlugin.AdditionalEventCondition.Scene_Map_onMapLoaded.call(this);
 };
