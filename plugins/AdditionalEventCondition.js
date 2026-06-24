@@ -38,6 +38,9 @@ VynPlugin.AdditionalEventCondition = VynPlugin.AdditionalEventCondition || {};
  * This will refresh on the map and the condition will work as intended
  * ============================================================================
  * Changelog
+ * v1.0.1
+ * Fix nullPointerException when event has no page
+ * 
  * v1.0.0 
  * Init plugin
  */
@@ -60,6 +63,7 @@ Scene_Map.prototype.onMapLoaded = function () {
 Scene_Map.prototype.processAdditionalMapEvent = function () {
     for (var n = 1; n < $dataMap.events.length; n++) {
         var event = $dataMap.events[n];
+        if (!event || !event.pages) continue;
         for (var m = 0; m < event.pages.length; m++) {
             var pageList = event.pages[m].list.filter(page => page.code == 408 || page.code == 108);
             if (pageList.length == 0) continue;
