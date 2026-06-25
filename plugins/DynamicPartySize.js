@@ -69,6 +69,9 @@ VynPlugin.DynamicPartySize = VynPlugin.DynamicPartySize || {};
  * 
  * ============================================================================
  * Changelog
+ * v1.1.1
+ * Fix plugin command cause not work for other plugin
+ * 
  * v1.1.0
  * Add descriptions
  * 
@@ -175,8 +178,9 @@ Game_Party.prototype.perLineBattleMembers = function () {
 //-----------------------------------------------------------------------------
 // Game_Interpreter
 //-----------------------------------------------------------------------------
+VynPlugin.DynamicPartySize.Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
 Game_Interpreter.prototype.pluginCommand = function (command, args) {
-    VynPlugin.TeleportStorage.Game_Interpreter_pluginCommand.apply(this, arguments);
+    VynPlugin.DynamicPartySize.Game_Interpreter_pluginCommand.apply(this, arguments);
     const com = command.trim().toLowerCase();
 
     switch (com) {
