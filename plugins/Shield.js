@@ -2,6 +2,9 @@
 // Shield.js
 //=============================================================================
 
+var Imported = Imported || {};
+Imported.VynPlugin_Shield = true;
+
 var VynPlugin = VynPlugin || {};
 VynPlugin.Shield = VynPlugin.Shield || {};
 
@@ -306,7 +309,6 @@ VynPlugin.params.XPositionTroop = VynPlugin.parameters['X Position Troop'];
 VynPlugin.params.MaximumTextWidthTroop = VynPlugin.parameters['Maximum Text Width Troop'];
 VynPlugin.params.YPositionTroop = VynPlugin.parameters['Y Position Troop'];
 VynPlugin.params.YOffsetTroop = VynPlugin.parameters['Y Offset Troop'];
-
 
 //=============================================================================
 // DataManager
