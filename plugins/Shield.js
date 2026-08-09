@@ -11,7 +11,7 @@ VynPlugin.Shield = VynPlugin.Shield || {};
 /*:
  * Shield
  *
- * @plugindesc v1.1.5 This plugin to add shield and team shield
+ * @plugindesc v1.1.6 This plugin to add shield and team shield
  * @author Vyndicate
  * 
  * @param Reset Shield
@@ -83,7 +83,7 @@ VynPlugin.Shield = VynPlugin.Shield || {};
  * allies. Party, Troop, and Enemies will not have gauge and they will have
  * text instead
  * 
- * Skill Notetag:
+ * Skill/Items Notetag:
  * <Shield: x>
  * <Shield: formula>
  * Gain of x amount of shield for each target
@@ -263,6 +263,9 @@ VynPlugin.Shield = VynPlugin.Shield || {};
  * 
  * ============================================================================
  * Changelog
+ * v1.1.6
+ * Add shield effect for Items
+ * 
  * v1.1.5
  * Fix static number value cause NaN error
  * Fix shield will not retain if the battler has shield, killed, and revived 
@@ -318,6 +321,7 @@ DataManager.isDatabaseLoaded = function () {
     if (!VynPlugin.Shield.Database_Loaded.call(this)) return false;
     if (!VynPlugin.Shield._loadShielding) {
         this.setShield($dataSkills);
+        this.setShield($dataItems);
         this.setStateShield($dataStates);
         VynPlugin.Shield._loadShielding = true;
     }
