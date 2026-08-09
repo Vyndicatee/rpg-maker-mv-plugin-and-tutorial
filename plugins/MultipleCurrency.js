@@ -269,7 +269,7 @@ Window_ShopBuy.prototype.drawItem = function (index) {
     var currency = this._currencyUnit[index];
     var icon = this._currencyIcon[index];
     var rect = this.itemRect(index);
-    var priceWidth = 96;
+    var priceWidth = 72 + this.textWidth(price);
     rect.width -= this.textPadding();
     if (item instanceof Object) {
         this.changePaintOpacity(this.isEnabled(item));
