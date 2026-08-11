@@ -1,7 +1,7 @@
 /*:
  * Multiple Currency
  *
- * @plugindesc v1.1.0 This plugin adds support for multiple currencies
+ * @plugindesc v1.2.0 This plugin adds support for multiple currencies
  * @author Vyndicate
  *
  * @help
@@ -34,6 +34,10 @@
  * 
  * If you want to use an Icon, you can use icon[x] with x as icon index
  * 
+ * <Is Buy/Sell Using Gold>
+ * If you want to keep Gold as currency while first notetag available, 
+ * you can use this
+ * 
  * ===Item/Armor/Weapon/Variable name===
  * icon[x]Item Name
  * if you don't want to use the name, you can just add <> between Item Name
@@ -44,6 +48,9 @@
  * 
  * ============================================================================
  * Changelog
+ * v1.2.0
+ * Add Gold option even if multiple currency exist
+ * 
  * v1.1.0
  * Add icon support. Available both buy window and gold window
  * 
@@ -125,6 +132,8 @@ DataManager.setCurrency = function (items) {
         });
         obj.shopNewCurrency = list;
         obj.shopDupesFromId = Number(obj.meta["Dupes"]) || 0;
+        obj.isBuyUsingGold = !!obj.meta["Is Buy Using Gold"];
+        obj.isSellUsingGold = !!obj.meta["Is Sell Using Gold"];
     }
 };
 
@@ -186,6 +195,7 @@ Window_ShopBuy.prototype.makeItemList = function () {
                     var newItem = Object.assign({}, $dataItems[item.shopDupesFromId]);
                     newItem.shopNewCurrency = shopObject;
                     newItem.shopDupesFromId = shopDupesId;
+                    newItem.isBuyUsingGold = item.isBuyUsingGold;
                     item = newItem;
                 }
                 break;
@@ -197,6 +207,7 @@ Window_ShopBuy.prototype.makeItemList = function () {
                     var newItem = Object.assign({}, $dataWeapons[item.shopDupesFromId]);
                     newItem.shopNewCurrency = shopObject;
                     newItem.shopDupesFromId = shopDupesId;
+                    newItem.isBuyUsingGold = item.isBuyUsingGold;
                     item = newItem;
                 }
                 break;
@@ -208,6 +219,7 @@ Window_ShopBuy.prototype.makeItemList = function () {
                     var newItem = Object.assign({}, $dataArmors[item.shopDupesFromId]);
                     newItem.shopNewCurrency = shopObject;
                     newItem.shopDupesFromId = shopDupesId;
+                    newItem.isBuyUsingGold = item.isBuyUsingGold;
                     item = newItem;
                 }
                 break;
@@ -218,9 +230,18 @@ Window_ShopBuy.prototype.makeItemList = function () {
             item.realItemName = convertIntoRealItemName(item.name);
             item.realIconIndex = item.iconIndex;
             let shopCurrency = item.shopNewCurrency.filter(ncl => ncl.isBuy);
+            let isUsingGold = false;
+            if (item.isBuyUsingGold) {
+                isUsingGold = true;
+                this._data.push(item);
+                this._price.push(goods[2] === 0 ? item.price : goods[3]);
+                this._priceText.push((goods[2] === 0 ? item.price : goods[3]) + " ");
+                this._currencyUnit.push(TextManager.currencyUnit);
+                this._currencyIcon.push(null);
+            }
             if (shopCurrency && shopCurrency.length > 0) {
                 for (let i = 0; i < shopCurrency.length; i++) {
-                    if (i > 0) {
+                    if (isUsingGold || i > 0) {
                         this._data.push(index + offset);
                     } else {
                         this._data.push(item);
@@ -306,6 +327,9 @@ Window_ShopBuy.prototype.isEnabled = function (item) {
     let shopCurrency = item.shopNewCurrency.filter(ncb => ncb.isBuy);
     if (shopCurrency && shopCurrency.length > 0) {
         let isEnabled = true;
+        if (item.isBuyUsingGold) {
+            isEnabled = isEnabled && this.isGoldEnabled(item);
+        }
         for (let i = 0; i < shopCurrency.length; i++) {
             let amount = shopCurrency[i].amount;
             let type = shopCurrency[i].type;
@@ -330,15 +354,21 @@ Window_ShopBuy.prototype.isEnabled = function (item) {
         }
         return isEnabled;
     }
-    return (this.price(item) <= $gameParty.gold() &&
-        !$gameParty.hasMaxItems(item));
+    return this.price(item) <= $gameParty.gold() && !$gameParty.hasMaxItems(item);
 };
+
+Window_ShopBuy.prototype.isGoldEnabled = function (item) {
+    return item.price <= $gameParty.gold() && !$gameParty.hasMaxItems(item);
+}
 
 Window_ShopBuy.prototype.price = function (item) {
     if (!item) return 0;
     let shopCurrency = item.shopNewCurrency.filter(ncb => ncb.isBuy);
     if (shopCurrency && shopCurrency.length > 0) {
         let amounts = [];
+        if (item.isBuyUsingGold) {
+            amounts.push(item.price);
+        }
         for (let i = 0; i < shopCurrency.length; i++) {
             let amount = shopCurrency[i].amount;
             amounts.push(amount);
@@ -353,7 +383,10 @@ Window_ShopBuy.prototype.cursorDown = function (wrap) {
     VynPlugin.MultipleCurrency.Window_ShopBuy_cursorDown.apply(this, arguments);
     let item = this._data[this.index()];
     if (typeof item === "number") {
-        let length = this._data[item].shopNewCurrency.length;
+        let newItem = this._data[item];
+        let shopCurrency = newItem.shopNewCurrency.filter(ncb => ncb.isBuy)
+        let length = shopCurrency.length;
+        if (newItem.isBuyUsingGold && shopCurrency.length > 0) length++;
         let currencyOffset = length - 1;
         this._index += currencyOffset;
         this.select(this.index());
@@ -366,7 +399,10 @@ Window_ShopBuy.prototype.cursorUp = function (wrap) {
     VynPlugin.MultipleCurrency.Window_ShopBuy_cursorUp.apply(this, arguments);
     let item = this._data[this.index()];
     if (typeof item === "number") {
-        let length = this._data[item].shopNewCurrency.length;
+        let newItem = this._data[item];
+        let shopCurrency = newItem.shopNewCurrency.filter(ncb => ncb.isBuy)
+        let length = shopCurrency.length;
+        if (newItem.isBuyUsingGold && shopCurrency.length > 0) length++;
         let currencyOffset = length - 1;
         this._index -= currencyOffset;
         this.select(this.index());
@@ -384,7 +420,11 @@ Window_ShopBuy.prototype.updateCursor = function () {
         let item = this._data[this.index()];
         let length = 1;
         if (item instanceof Object) {
-            length = item.shopNewCurrency.filter(ncb => ncb.isBuy).length || 1;
+            let shopCurrency = item.shopNewCurrency.filter(ncb => ncb.isBuy)
+            length = shopCurrency.length || 1;
+            if (item.isBuyUsingGold && shopCurrency.length > 0) {
+                length++;
+            }
         }
         this.setCursorRect(rect.x, rect.y, rect.width, rect.height * length);
     } else {
@@ -404,6 +444,9 @@ Window_ShopSell.prototype.isEnabled = function (item) {
     let shopCurrency = item.shopNewCurrency.filter(ncb => !ncb.isBuy);
     if (shopCurrency && shopCurrency.length > 0) {
         let isEnabled = true;
+        if (item.isSellUsingGold) {
+            isEnabled = isEnabled && item.price > 0;
+        }
         for (let i = 0; i < shopCurrency.length; i++) {
             let amount = shopCurrency[i].amount;
 
@@ -620,6 +663,9 @@ Scene_Shop.prototype.sellingPrice = function () {
     let shopCurrency = item.shopNewCurrency.filter(ncb => !ncb.isBuy);
     if (shopCurrency && shopCurrency.length > 0) {
         let amounts = [];
+        if (item.isSellUsingGold) {
+            amounts.push(item.price / 2);
+        }
         for (let i = 0; i < shopCurrency.length; i++) {
             let amount = shopCurrency[i].amount;
             amounts.push(amount);
@@ -658,6 +704,10 @@ Scene_Shop.prototype.doBuy = function (number) {
     let shopCurrency = item.shopNewCurrency.filter(ncb => ncb.isBuy);
     if (shopCurrency && shopCurrency.length > 0) {
         let currentValue = [];
+        if (item.isBuyUsingGold) {
+            $gameParty.loseGold(number * item.price);
+            currentValue.push($gameParty.gold());
+        }
         for (let i = 0; i < shopCurrency.length; i++) {
             let amount = shopCurrency[i].amount;
             let type = shopCurrency[i].type;
@@ -717,6 +767,10 @@ Scene_Shop.prototype.doSell = function (number) {
     let shopCurrency = item.shopNewCurrency.filter(ncb => !ncb.isBuy);
     if (shopCurrency && shopCurrency.length > 0) {
         let currentValue = [];
+        if (item.isSellUsingGold) {
+            $gameParty.gainGold(number * item.price);
+            currentValue.push($gameParty.gold());
+        }
         for (let i = 0; i < shopCurrency.length; i++) {
             let amount = shopCurrency[i].amount;
             let type = shopCurrency[i].type;
@@ -777,6 +831,10 @@ Scene_Shop.prototype.changeCurrency = function (item, isBuy) {
     if (itemCurrency && itemCurrency.length > 0) {
         let currencies = [];
         let amounts = [];
+        if (isBuy && item.isBuyUsingGold || !isBuy && item.isSellUsingGold) {
+            currencies.push(TextManager.currencyUnit);
+            amounts.push($gameParty.gold());
+        }
         for (let i = 0; i < itemCurrency.length; i++) {
             let type = itemCurrency[i].type;
             let id = itemCurrency[i].id;
