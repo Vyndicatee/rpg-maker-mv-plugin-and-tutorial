@@ -18,6 +18,7 @@ VynPlugin.AdditionalBattleReward = VynPlugin.AdditionalBattleReward || {};
  * With this, you can drop more than one item and also you can have multiple
  * of items that not just limited by 3 drops
  * 
+ * Enemies Notetag:
  * <Drop Item/Armor/Weapon x: y>
  * This will drop any specified with id x and denominator y (Chance getting
  * the drop with 1/y like the engine intended)
