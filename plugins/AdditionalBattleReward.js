@@ -8,7 +8,7 @@ VynPlugin.AdditionalBattleReward = VynPlugin.AdditionalBattleReward || {};
 /*:
  * Addition Battle Reward
  *
- * @plugindesc v1.0.0 This plugin add additional reward after win battle
+ * @plugindesc v1.1.0 This plugin add additional reward after win battle
  * @author Vyndicate
  *
  * @help
@@ -24,10 +24,16 @@ VynPlugin.AdditionalBattleReward = VynPlugin.AdditionalBattleReward || {};
  * the drop with 1/y like the engine intended)
  * 
  * <Drop Multiple x Item/Armor/Weapon y: z>
- * Same as above, but with multiple, you can get more than 1 drop per monster
+ * Same as normal one, but with multiple, you can get more than 1 drop per monster
  * per battle
  * This can be good if you have other currency to exchange some item in game
+ * 
+ * <Drop Multiple Random x-y Item/Armor/Weapon z: w>
+ * Same as multiple drop, but with random, you can get random drop between x-y
  * ============================================================================
+ * v1.1.0
+ * Add random number, now you can get amount of reward randomly
+ * 
  * v1.0.0
  * Initiate Plugin
  */
@@ -74,9 +80,19 @@ DataManager.processAdditionalBattleReward = function (enemies) {
                 if (metaText[index].toLowerCase() == "multiple") {
                     index++;
                     let multiple = Number(metaText[index]);
-                    if (multiple < 1) multiple = 1;
-                    tempObject.multiple = multiple;
-                    index++
+                    if (isNaN(multiple)) {
+                        if (metaText[index].toLowerCase() == "random") {
+                            index++;
+                            let randomBetween = metaText[index].split("-");
+                            tempObject.randomLow = Number(randomBetween[0]);
+                            tempObject.randomHigh = Number(randomBetween[1]);
+                            index++;
+                        }
+                    } else {
+                        if (multiple < 1) multiple = 1;
+                        tempObject.multiple = multiple;
+                        index++
+                    }
                 }
             }
 
@@ -146,6 +162,8 @@ Game_Enemy.prototype.makeDropItems = function () {
         if (di.kind > 0 && Math.random() * di.denominator < this.dropItemRate()) {
             if (di.multiple) {
                 return r.concat(this.itemObjectMultiple(di.kind, di.dataId, di.multiple));
+            } else if (di.randomLow && di.randomHigh) {
+                return r.concat(this.itemObjectRandom(di.kind, di.dataId, di.randomLow, di.randomHigh));
             } else {
                 return r.concat(this.itemObject(di.kind, di.dataId));
             }
@@ -166,6 +184,21 @@ Game_Enemy.prototype.itemObjectMultiple = function (kind, dataId, multiple) {
     } else if (kind === 3) {
         data = $dataArmors[dataId];
         data.multipleDrops = multiple;
+    }
+    return data;
+};
+
+Game_Enemy.prototype.itemObjectRandom = function (kind, dataId, randomLow, randomHigh) {
+    let data = null;
+    if (kind === 1) {
+        data = $dataItems[dataId];
+        data.multipleDrops = Math.randomInt(randomHigh - randomLow) + randomLow;
+    } else if (kind === 2) {
+        data = $dataWeapons[dataId];
+        data.multipleDrops = Math.randomInt(randomHigh - randomLow) + randomLow;
+    } else if (kind === 3) {
+        data = $dataArmors[dataId];
+        data.multipleDrops = Math.randomInt(randomHigh - randomLow) + randomLow;
     }
     return data;
 };
