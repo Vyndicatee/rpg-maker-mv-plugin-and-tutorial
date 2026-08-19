@@ -8,7 +8,7 @@ VynPlugin.AdditionalBattleReward = VynPlugin.AdditionalBattleReward || {};
 /*:
  * Addition Battle Reward
  *
- * @plugindesc v1.1.0 This plugin add additional reward after win battle
+ * @plugindesc v1.2.0 This plugin add additional reward after win battle
  * @author Vyndicate
  *
  * @help
@@ -31,6 +31,9 @@ VynPlugin.AdditionalBattleReward = VynPlugin.AdditionalBattleReward || {};
  * <Drop Multiple Random x-y Item/Armor/Weapon z: w>
  * Same as multiple drop, but with random, you can get random drop between x-y
  * ============================================================================
+ * v1.2.0
+ * Combine duplicate items that drop from multiple enemies
+ * 
  * v1.1.0
  * Add random number, now you can get amount of reward randomly
  * 
