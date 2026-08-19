@@ -154,6 +154,28 @@ BattleManager.gainDropItems = function () {
     });
 };
 
+VynPlugin.AdditionalBattleReward.BattleManager_makeRewards = BattleManager.makeRewards;
+BattleManager.makeRewards = function () {
+    VynPlugin.AdditionalBattleReward.BattleManager_makeRewards.call(this);
+    this._rewards.items = this._rewards.items.reduce(function (result, obj) {
+        let existing = result.find(function (item) {
+            return item.id === obj.id;
+        });
+
+        let multipleDrops = obj.multipleDrops || 1;
+
+        if (existing) {
+            existing.multipleDrops += multipleDrops;
+        } else {
+            result.push(Object.assign({}, obj, {
+                multipleDrops: multipleDrops
+            }));
+        }
+
+        return result;
+    }, []);
+};
+
 //-----------------------------------------------------------------------------
 // Game_Enemy
 //-----------------------------------------------------------------------------
