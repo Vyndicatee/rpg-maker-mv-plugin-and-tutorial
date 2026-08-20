@@ -8,7 +8,7 @@ VynPlugin.AdditionalBattleReward = VynPlugin.AdditionalBattleReward || {};
 /*:
  * Addition Battle Reward
  *
- * @plugindesc v1.2.0 This plugin add additional reward after win battle
+ * @plugindesc v1.2.1 This plugin add additional reward after win battle
  * @author Vyndicate
  *
  * @help
@@ -31,6 +31,9 @@ VynPlugin.AdditionalBattleReward = VynPlugin.AdditionalBattleReward || {};
  * <Drop Multiple Random x-y Item/Armor/Weapon z: w>
  * Same as multiple drop, but with random, you can get random drop between x-y
  * ============================================================================
+ * v1.2.1
+ * Fix duplicate items cause miscalculation, and also not adding to inventory
+ * 
  * v1.2.0
  * Combine duplicate items that drop from multiple enemies
  * 
@@ -153,30 +156,21 @@ BattleManager.gainDropItems = function () {
         } else {
             $gameParty.gainItem(item, 1);
         }
-
     });
 };
 
 VynPlugin.AdditionalBattleReward.BattleManager_makeRewards = BattleManager.makeRewards;
 BattleManager.makeRewards = function () {
     VynPlugin.AdditionalBattleReward.BattleManager_makeRewards.call(this);
-    this._rewards.items = this._rewards.items.reduce(function (result, obj) {
-        let existing = result.find(function (item) {
-            return item.id === obj.id;
-        });
-
-        let multipleDrops = obj.multipleDrops || 1;
-
-        if (existing) {
-            existing.multipleDrops += multipleDrops;
-        } else {
-            result.push(Object.assign({}, obj, {
-                multipleDrops: multipleDrops
-            }));
-        }
-
-        return result;
-    }, []);
+    const uniqueItems = [...new Set(this._rewards.items)];
+    for (const obj of uniqueItems) {
+        let totalReward = obj.totalReward.reduce(function (result, value) {
+            return result + value;
+        }, 0)
+        obj.multipleDrops = totalReward;
+        delete obj.totalReward;
+    }
+    this._rewards.items = uniqueItems;
 };
 
 //-----------------------------------------------------------------------------
@@ -202,28 +196,35 @@ Game_Enemy.prototype.itemObjectMultiple = function (kind, dataId, multiple) {
     let data = null;
     if (kind === 1) {
         data = $dataItems[dataId];
-        data.multipleDrops = multiple;
     } else if (kind === 2) {
         data = $dataWeapons[dataId];
-        data.multipleDrops = multiple;
     } else if (kind === 3) {
         data = $dataArmors[dataId];
-        data.multipleDrops = multiple;
+    }
+    if (data) {
+        if (!data.totalReward) {
+            data.totalReward = [];
+        }
+        data.totalReward.push(multiple);
     }
     return data;
 };
 
 Game_Enemy.prototype.itemObjectRandom = function (kind, dataId, randomLow, randomHigh) {
     let data = null;
+    let multiple = Math.randomInt(randomHigh - randomLow) + randomLow;
     if (kind === 1) {
         data = $dataItems[dataId];
-        data.multipleDrops = Math.randomInt(randomHigh - randomLow) + randomLow;
     } else if (kind === 2) {
         data = $dataWeapons[dataId];
-        data.multipleDrops = Math.randomInt(randomHigh - randomLow) + randomLow;
     } else if (kind === 3) {
         data = $dataArmors[dataId];
-        data.multipleDrops = Math.randomInt(randomHigh - randomLow) + randomLow;
+    }
+    if (data) {
+        if (!data.totalReward) {
+            data.totalReward = [];
+        }
+        data.totalReward.push(multiple);
     }
     return data;
 };
