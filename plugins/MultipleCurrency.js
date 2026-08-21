@@ -1,7 +1,7 @@
 /*:
  * Multiple Currency
  *
- * @plugindesc v1.2.1 This plugin adds support for multiple currencies
+ * @plugindesc v1.2.2 This plugin adds support for multiple currencies
  * @author Vyndicate
  *
  * @help
@@ -48,8 +48,11 @@
  * 
  * ============================================================================
  * Changelog
+ * v1.2.2
+ * Fix item list on shop and menu shown incorrect names
+ * 
  * v1.2.1
- * Fix item drop on enemy shown incorrect
+ * Fix item drop on enemy shown incorrect names
  * 
  * v1.2.0
  * Add Gold option even if multiple currency exist
@@ -133,24 +136,12 @@ DataManager.setCurrency = function (items) {
                 list.push(tempObject);
             }
         });
+        obj.itemRealName = convertIntoItemRealName(obj.name);
         obj.shopNewCurrency = list;
         obj.shopDupesFromId = Number(obj.meta["Dupes"]) || 0;
         obj.isBuyUsingGold = !!obj.meta["Is Buy Using Gold"];
         obj.isSellUsingGold = !!obj.meta["Is Sell Using Gold"];
     }
-};
-
-//=============================================================================
-// Game_Enemy
-//=============================================================================
-VynPlugin.MultipleCurrency.Game_Enemy_makeDropItems = Game_Enemy.prototype.makeDropItems;
-Game_Enemy.prototype.makeDropItems = function () {
-    let itemDrops = VynPlugin.MultipleCurrency.Game_Enemy_makeDropItems.call(this);
-    for (const itemDrop of itemDrops) {
-        let itemRealName = convertIntoRealItemName(itemDrop.name);
-        itemDrop.itemRealName = itemRealName;
-    }
-    return itemDrops;
 };
 
 //=============================================================================
@@ -200,6 +191,22 @@ Window_Base.prototype.drawMultipleCurrenciesValue = function (value, unit, x, y,
         this.drawText(currency, x + currentX + width - unitWidth, y, unitWidth, 'right');
         currentX -= this.textWidth(value[i] + currency) + iconBoxWidth + 10;
     }
+};
+
+VynPlugin.MultipleCurrency.Window_Base_drawItemName = Window_Base.prototype.drawItemName;
+Window_Base.prototype.drawItemName = function (item, x, y, width) {
+    if (item.itemRealName) {
+        width = width || 312;
+        if (item) {
+            var iconBoxWidth = Window_Base._iconWidth + 4;
+            this.resetTextColor();
+            this.drawIcon(item.iconIndex, x + 2, y + 2);
+            this.drawText(item.itemRealName, x + iconBoxWidth, y, width - iconBoxWidth);
+        }
+    } else {
+        VynPlugin.MultipleCurrency.Window_Base_drawItemName.apply(this, arguments);
+    }
+
 };
 
 //=============================================================================
@@ -270,7 +277,6 @@ Window_ShopBuy.prototype.makeItemList = function () {
         if (item) {
             // 0 = dataItems, 1 = dataWeapons, 2 = dataArmors
             item.itemTypeId = goods[0];
-            item.realItemName = convertIntoRealItemName(item.name);
             item.realIconIndex = item.iconIndex;
             let shopCurrency = item.shopNewCurrency.filter(ncl => ncl.isBuy);
             let isUsingGold = false;
@@ -337,7 +343,7 @@ Window_ShopBuy.prototype.drawItem = function (index) {
     rect.width -= this.textPadding();
     if (item instanceof Object) {
         this.changePaintOpacity(this.isEnabled(item));
-        this.drawItemName(item.realItemName, item.realIconIndex, rect.x, rect.y, rect.width - priceWidth);
+        this.drawItemName(item.itemRealName, item.realIconIndex, rect.x, rect.y, rect.width - priceWidth);
     } else if (typeof item == "number") {
         this.changePaintOpacity(this.isEnabled(this._data[item]));
     }
@@ -912,7 +918,7 @@ Scene_Shop.prototype.changeCurrency = function (item, isBuy) {
 //=============================================================================
 // Functions
 //=============================================================================
-function convertIntoRealItemName(text) {
+function convertIntoItemRealName(text) {
     return text
         .replace(/^icon\[\d+\]/, "")
         .replace(/^<|>$/g, "");
