@@ -1,7 +1,7 @@
 /*:
  * Multiple Currency
  *
- * @plugindesc v1.2.0 This plugin adds support for multiple currencies
+ * @plugindesc v1.2.1 This plugin adds support for multiple currencies
  * @author Vyndicate
  *
  * @help
@@ -48,6 +48,9 @@
  * 
  * ============================================================================
  * Changelog
+ * v1.2.1
+ * Fix item drop on enemy shown incorrect
+ * 
  * v1.2.0
  * Add Gold option even if multiple currency exist
  * 
@@ -134,6 +137,46 @@ DataManager.setCurrency = function (items) {
         obj.shopDupesFromId = Number(obj.meta["Dupes"]) || 0;
         obj.isBuyUsingGold = !!obj.meta["Is Buy Using Gold"];
         obj.isSellUsingGold = !!obj.meta["Is Sell Using Gold"];
+    }
+};
+
+//=============================================================================
+// Game_Enemy
+//=============================================================================
+VynPlugin.MultipleCurrency.Game_Enemy_makeDropItems = Game_Enemy.prototype.makeDropItems;
+Game_Enemy.prototype.makeDropItems = function () {
+    let itemDrops = VynPlugin.MultipleCurrency.Game_Enemy_makeDropItems.call(this);
+    for (const itemDrop of itemDrops) {
+        let itemRealName = convertIntoRealItemName(itemDrop.name);
+        itemDrop.itemRealName = itemRealName;
+    }
+    return itemDrops;
+};
+
+//=============================================================================
+// BattleManager
+//=============================================================================
+VynPlugin.MultipleCurrency.BattleManager_displayDropItems = BattleManager.displayDropItems;
+BattleManager.displayDropItems = function () {
+    var items = this._rewards.items;
+    if (VynPlugin.AdditionalBattleReward) {
+        if (items.length > 0) {
+            $gameMessage.newPage();
+            items.forEach(function (item) {
+                if (item.multipleDrops) {
+                    $gameMessage.add(item.multipleDrops + " " + TextManager.obtainItem.format(item.itemRealName));
+                } else {
+                    $gameMessage.add(TextManager.obtainItem.format(item.itemRealName));
+                }
+            });
+        }
+    } else {
+        if (items.length > 0) {
+            $gameMessage.newPage();
+            items.forEach(function (item) {
+                $gameMessage.add(TextManager.obtainItem.format(item.itemRealName));
+            });
+        }
     }
 };
 
