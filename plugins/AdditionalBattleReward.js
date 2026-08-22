@@ -8,7 +8,7 @@ VynPlugin.AdditionalBattleReward = VynPlugin.AdditionalBattleReward || {};
 /*:
  * Addition Battle Reward
  *
- * @plugindesc v1.2.1 This plugin add additional reward after win battle
+ * @plugindesc v1.3.0 This plugin add additional reward after win battle
  * @author Vyndicate
  *
  * @help
@@ -30,7 +30,14 @@ VynPlugin.AdditionalBattleReward = VynPlugin.AdditionalBattleReward || {};
  * 
  * <Drop Multiple Random x-y Item/Armor/Weapon z: w>
  * Same as multiple drop, but with random, you can get random drop between x-y
+ * 
+ * <Copy Item Drop: x>
+ * You can copy all items including from database default from other enemy
+ * with x an id for what enemy you want to copy
  * ============================================================================
+ * v1.3.0
+ * Add new notetag to copy all drop items from other enemy
+ * 
  * v1.2.1
  * Fix duplicate items cause miscalculation, and also not adding to inventory
  * 
@@ -60,9 +67,9 @@ DataManager.isDatabaseLoaded = function () {
 };
 
 DataManager.processAdditionalBattleReward = function (enemies) {
+    let object = { kind: 0, dataId: 1, denominator: 1 };
     for (let n = 1; n < enemies.length; n++) {
         let enemy = enemies[n];
-        let object = { kind: 0, dataId: 1, denominator: 1 };
         Object.entries(enemy.meta).forEach(([key, value]) => {
             let denominator = Number(value);
             let index = 0;
@@ -128,6 +135,19 @@ DataManager.processAdditionalBattleReward = function (enemies) {
             enemy.dropItems.push(tempObject);
         });
     }
+
+    // Add copy stuff in another for loops
+    for (let n = 1; n < enemies.length; n++) {
+        let enemy = enemies[n];
+
+        let targetDuplicateDropId = Number(enemy.meta["Copy Item Drop"]);
+
+        if (!isNaN(targetDuplicateDropId)) {
+            let copiedDrop = enemies[targetDuplicateDropId].dropItems;
+            enemy.dropItems.push(...copiedDrop);
+        }
+    }
+
 };
 
 //-----------------------------------------------------------------------------
