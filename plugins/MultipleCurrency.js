@@ -1,7 +1,7 @@
 /*:
  * Multiple Currency
  *
- * @plugindesc v1.2.2 This plugin adds support for multiple currencies
+ * @plugindesc v1.2.3 This plugin adds support for multiple currencies
  * @author Vyndicate
  *
  * @help
@@ -46,8 +46,12 @@
  * 
  * PSA: Don't open this js file because the code is spaghetti
  * 
+ * Put below AdditionalBattleReward plugin to make it work properly
  * ============================================================================
  * Changelog
+ * v1.2.3
+ * Fix incorrect cursor placement, and some item cause error
+ * 
  * v1.2.2
  * Fix item list on shop and menu shown incorrect names
  * 
@@ -195,14 +199,12 @@ Window_Base.prototype.drawMultipleCurrenciesValue = function (value, unit, x, y,
 
 VynPlugin.MultipleCurrency.Window_Base_drawItemName = Window_Base.prototype.drawItemName;
 Window_Base.prototype.drawItemName = function (item, x, y, width) {
-    if (item.itemRealName) {
+    if (item && item.itemRealName) {
         width = width || 312;
-        if (item) {
-            var iconBoxWidth = Window_Base._iconWidth + 4;
-            this.resetTextColor();
-            this.drawIcon(item.iconIndex, x + 2, y + 2);
-            this.drawText(item.itemRealName, x + iconBoxWidth, y, width - iconBoxWidth);
-        }
+        var iconBoxWidth = Window_Base._iconWidth + 4;
+        this.resetTextColor();
+        this.drawIcon(item.iconIndex, x + 2, y + 2);
+        this.drawText(item.itemRealName, x + iconBoxWidth, y, width - iconBoxWidth);
     } else {
         VynPlugin.MultipleCurrency.Window_Base_drawItemName.apply(this, arguments);
     }
@@ -438,6 +440,9 @@ Window_ShopBuy.prototype.cursorDown = function (wrap) {
         if (newItem.isBuyUsingGold && shopCurrency.length > 0) length++;
         let currencyOffset = length - 1;
         this._index += currencyOffset;
+        if (this.index() > this._data.length - 1) {
+            this._index -= this._data.length;
+        }
         this.select(this.index());
     }
     this.callChangeCurrency(this._data[this.index()]);

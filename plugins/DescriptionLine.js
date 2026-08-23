@@ -8,7 +8,7 @@ VynPlugin.DescriptionLine = VynPlugin.DescriptionLine || {};
 /*:
  * Description Line
  *
- * @plugindesc v1.2.0 This plugin to change the description line based on what you want
+ * @plugindesc v1.3.0 This plugin to change the description line based on what you want
  * @author Vyndicate
  *
  * @param Max Row Item
@@ -23,6 +23,11 @@ VynPlugin.DescriptionLine = VynPlugin.DescriptionLine || {};
  * 
  * @param Max Row Equip
  * @desc How many lines you want to show in equip menu? Default 2
+ * @type number
+ * @default 2
+ * 
+ * @param Default Max Row
+ * @desc How many lines you want to show in most places? Default 2
  * @type number
  * @default 2
  * 
@@ -50,6 +55,10 @@ VynPlugin.DescriptionLine = VynPlugin.DescriptionLine || {};
  *
  * ============================================================================
  * Changelog
+ * v1.3.0 
+ * Add parameter default max row
+ * Change from var to let
+ * 
  * v1.2.0 
  * Add parameter for item and equip
  * 
@@ -62,11 +71,12 @@ VynPlugin.DescriptionLine = VynPlugin.DescriptionLine || {};
 
 
 var parameters = PluginManager.parameters('DescriptionLine');
-var maxRowItem = Number(parameters['Max Row Item']);
-var maxRowSkill = Number(parameters['Max Row Skill']);
-var maxRowEquip = Number(parameters['Max Row Equip']);
-var isYanflyEquipPlugin = parameters['Is Using Yanfly Equip Core'] == "true";
-var isYanflyCoreUpdatePlugin = parameters['Is Using Yanfly Core Updates OPT'] == "true";
+let maxRowItem = Number(parameters['Max Row Item']);
+let maxRowSkill = Number(parameters['Max Row Skill']);
+let maxRowEquip = Number(parameters['Max Row Equip']);
+let defaultMaxRow = Number(parameters['Default Max Row']);
+let isYanflyEquipPlugin = parameters['Is Using Yanfly Equip Core'] == "true";
+let isYanflyCoreUpdatePlugin = parameters['Is Using Yanfly Core Updates OPT'] == "true";
 
 Window_Help.prototype.initialize = function (numLines = 2) {
     var width = Graphics.boxWidth;
@@ -75,7 +85,7 @@ Window_Help.prototype.initialize = function (numLines = 2) {
     this._text = '';
 };
 
-Scene_Battle.prototype.createHelpWindow = function (maxRow = 2) {
+Scene_Battle.prototype.createHelpWindow = function (maxRow = defaultMaxRow) {
     this._helpWindow = new Window_Help(maxRow);
     this._helpWindow.visible = false;
     this.addWindow(this._helpWindow);
@@ -107,14 +117,14 @@ Scene_Item.prototype.create = function () {
     this.createActorWindow();
 };
 
-Scene_Skill.prototype.create = function() {
+Scene_Skill.prototype.create = function () {
     Scene_ItemBase.prototype.create.call(this);
     this.createHelpWindow(maxRowSkill);
     this.createSkillTypeWindow();
     this.createStatusWindow();
     this.createItemWindow();
     this.createActorWindow();
-    if(isYanflyCoreUpdatePlugin) {
+    if (isYanflyCoreUpdatePlugin) {
         this.refreshActor();
     }
 };
