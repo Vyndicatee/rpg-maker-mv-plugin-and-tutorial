@@ -184,10 +184,11 @@ BattleManager.makeRewards = function () {
     VynPlugin.AdditionalBattleReward.BattleManager_makeRewards.call(this);
     const uniqueItems = [...new Set(this._rewards.items)];
     for (const obj of uniqueItems) {
-        let totalReward = obj.totalReward.reduce(function (result, value) {
+        let totalReward = obj.totalReward;
+        let realTotalReward = totalReward ? totalReward.reduce(function (result, value) {
             return result + value;
-        }, 0)
-        obj.multipleDrops = totalReward;
+        }, 0) : 1;
+        obj.multipleDrops = realTotalReward;
         delete obj.totalReward;
     }
     this._rewards.items = uniqueItems;
